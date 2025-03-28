@@ -21,11 +21,19 @@
             height: 400px;
             position: relative;
             overflow: hidden;
-            background-color: lightblue;
             border-bottom: 5px solid green;
             display: flex;
             justify-content: center;
             align-items: flex-end;
+        }
+        .background-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
         }
         .mario {
             width: 80px;
@@ -46,30 +54,41 @@
             background-color: brown;
             position: absolute;
             bottom: 0;
-            right: 0;
-            animation: move 2s infinite linear;
+            right: -50px;
+            display: none;
         }
-        @keyframes move {
-            from { right: -40px; }
-            to { right: 100vw; }
+        @keyframes moveObstacle {
+            from { right: -50px; }
+            to { right: 100%; }
         }
+
+        /* Game Over Box */
         .game-over {
             display: none;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
+            background: rgb(209, 247, 252);
+            padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 320px;
+            height: 300px;
         }
-        .restart-btn {
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 16px;
-            cursor: pointer;
+        .game-over img {
+            width: 100px;
+            margin-bottom: 10px;
         }
+        .game-over h2 {
+            margin: 0 0 10px;
+        }
+        .game-over p {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
         .score-board {
             position: absolute;
             top: 10px;
@@ -79,49 +98,66 @@
             padding: 10px;
             border-radius: 5px;
         }
-        /* Message for Mobile Users */
-        .mobile-message {
-            display: none;
+
+        /* Centered Start and Restart Buttons */
+        .start-btn, .restart-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 10px;
-            font-size: 14px;
-            border-radius: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            background: #ffcc00;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
-        @media (max-width: 768px) {
-            .mobile-message {
-                display: block;
-            }
+        .start-btn { top: 50%; transform: translate(-50%, -50%); }
+        .restart-btn { margin-top: 15px; }
+
+        .start-btn:hover, .restart-btn:hover {
+            background: #ff9900;
         }
     </style>
 </head>
 <body>
+    <video class="background-video" autoplay loop muted>
+        <source src="background.mp4" type="video/mp4">
+    </video>
+
     <div class="game-container">
         <div class="score-board" id="scoreBoard">Distance: 0m</div>
-        <img class="mario" id="mario" src="mari-unscreen.gif">
+        <!-- Initially standing Mario -->
+        <img class="mario" id="mario" src="standing-mario.png">
         <div class="obstacle" id="obstacle"></div>
     </div>
+
+    <!-- Game Over Screen -->
     <div class="game-over" id="gameOver">
+        <img src="mario-result.gif" alt="Game Over">
         <h2>Game Over</h2>
         <p>Your Score: <span id="finalScore">0</span> meters</p>
-        <img id="standingMario" src="claps.gif" alt="Standing Mario" style="width: 100%;">
-        <button class="restart-btn" onclick="restartGame()" style="align-self: center;">Restart</button>
+        <button class="restart-btn" onclick="restartGame()">Continue</button>
     </div>
-    
-    <!-- Message Suggesting Desktop Mode -->
-    <div class="mobile-message">
-        For a better experience, enable "Desktop Mode" in your browser.
-    </div>
+
+    <button class="start-btn" id="startButton" onclick="startGame()">Start Game</button>
+
+    <audio id="bgMusic" loop>
+        <source src="20. Saved the Princess (Super Mario Bros. 2).mp3" type="audio/mpeg">
+    </audio>
+    <audio id="gameOverMusic">
+        <source src="game over- mixkit-wrong-answer-fail-notification-946.wav" type="audio/mpeg">
+    </audio>
 
     <script>
         let distance = 0;
         let isGameOver = false;
+        let gameStarted = false;
         let mario = document.getElementById("mario");
+        let bgMusic = document.getElementById("bgMusic");
+        let gameOverMusic = document.getElementById("gameOverMusic");
 
-        // Function to make Mario jump
         function jump() {
             if (!mario.classList.contains("jump")) {
                 mario.classList.add("jump");
@@ -129,42 +165,66 @@
             }
         }
 
-        // Trigger jump when pressing Spacebar
         document.addEventListener("keydown", function(event) {
-            if (event.code === "Space") {
+            if (event.code === "Space" && gameStarted) {
                 jump();
             }
         });
 
-        // Trigger jump when tapping anywhere on mobile
         document.addEventListener("touchstart", function() {
-            jump();
+            if (gameStarted) jump();
         });
 
-        let gameInterval = setInterval(() => {
-            if (!isGameOver) {
-                distance += 1;
-                document.getElementById("scoreBoard").innerText = `Distance: ${distance}m`;
-            }
-            let obstacle = document.getElementById("obstacle");
-            let gameOverScreen = document.getElementById("gameOver");
-            let marioRect = mario.getBoundingClientRect();
-            let obstacleRect = obstacle.getBoundingClientRect();
+        document.addEventListener("click", function() {
+            if (gameStarted) jump();
+        });
 
-            if (
-                marioRect.right > obstacleRect.left &&
-                marioRect.left < obstacleRect.right &&
-                marioRect.bottom >= obstacleRect.top + 10 &&
-                !mario.classList.contains("jump") // Only detect collision if Mario is not jumping
-            ) {
-                clearInterval(gameInterval);
-                document.querySelector(".obstacle").style.animation = "none";
-                gameOverScreen.style.display = "block";
-                document.getElementById("finalScore").innerText = distance;
-                mario.src = "mario-standing.png";
-                isGameOver = true;
-            }
-        }, 100);
+        function startGame() {
+            gameStarted = true;
+            isGameOver = false;
+            document.getElementById("startButton").style.display = "none";
+            let obstacle = document.getElementById("obstacle");
+            obstacle.style.display = "block";
+            obstacle.style.animation = "moveObstacle 2s infinite linear";
+            
+            // Change Mario to running animation
+            mario.src = "mari-unscreen.gif";
+
+            bgMusic.play();
+            gameLoop();
+        }
+
+        function gameLoop() {
+            let gameInterval = setInterval(() => {
+                if (!isGameOver) {
+                    distance += 1;
+                    document.getElementById("scoreBoard").innerText = `Distance: ${distance}m`;
+                }
+                let obstacle = document.getElementById("obstacle");
+                let gameOverScreen = document.getElementById("gameOver");
+                let marioRect = mario.getBoundingClientRect();
+                let obstacleRect = obstacle.getBoundingClientRect();
+
+                if (
+                    marioRect.right > obstacleRect.left &&
+                    marioRect.left < obstacleRect.right &&
+                    marioRect.bottom >= obstacleRect.top + 10 &&
+                    !mario.classList.contains("jump")
+                ) {
+                    clearInterval(gameInterval);
+                    document.getElementById("obstacle").style.animation = "none";
+                    gameOverScreen.style.display = "block";
+                    document.getElementById("finalScore").innerText = distance;
+
+                    // Change Mario back to standing position
+                    mario.src = "standing-mario.png";
+
+                    isGameOver = true;
+                    bgMusic.pause();
+                    gameOverMusic.play();
+                }
+            }, 100);
+        }
 
         function restartGame() {
             location.reload();
