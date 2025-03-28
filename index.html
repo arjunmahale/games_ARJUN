@@ -232,10 +232,11 @@
             // Show loader only on reload
             document.getElementById("loader").style.display = "flex";
     
-            // Hide loader after 2.5 seconds
+            // Hide loader after 0.7 seconds
             setTimeout(() => {
-                document.getElementById("loader").style.display = "none";
-            }, 1000);
+    document.getElementById("loader").style.display = "none";
+}, Math.random() * (1200 - 500) + 500);
+
         } else {
             // If not a reload, hide loader immediately
             document.getElementById("loader").style.display = "none";
