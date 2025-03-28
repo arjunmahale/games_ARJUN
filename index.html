@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Mario Game</title>
     <style>
         body {
@@ -10,9 +10,14 @@
             overflow: hidden;
             background-color: skyblue;
             text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .game-container {
             width: 100vw;
+            max-width: 900px;
             height: 400px;
             position: relative;
             overflow: hidden;
@@ -74,6 +79,17 @@
             padding: 10px;
             border-radius: 5px;
         }
+        
+        /* Landscape mode for mobile */
+        @media screen and (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .game-container {
+                width: 100vw;
+                height: 60vh;
+            }
+        }
     </style>
 </head>
 <body>
@@ -107,9 +123,14 @@
             }
         });
 
-        // Touch input (Mobile)
-        document.getElementById("gameContainer").addEventListener("touchstart", function() {
-            jump();
+        // Touch input (Mobile) - Only if the user taps above Mario
+        document.getElementById("gameContainer").addEventListener("touchstart", function(event) {
+            let touchY = event.touches[0].clientY;
+            let marioY = mario.getBoundingClientRect().top;
+            
+            if (touchY < marioY) {
+                jump();
+            }
         });
 
         let gameInterval = setInterval(() => {
@@ -140,6 +161,15 @@
         function restartGame() {
             location.reload();
         }
+
+        // Force landscape mode alert
+        function checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+                alert("Please rotate your device to landscape mode for a better experience.");
+            }
+        }
+        window.addEventListener("resize", checkOrientation);
+        checkOrientation();
     </script>
 </body>
 </html>
