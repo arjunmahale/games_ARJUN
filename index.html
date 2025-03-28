@@ -79,21 +79,27 @@
             padding: 10px;
             border-radius: 5px;
         }
-        
-        /* Landscape mode for mobile */
-        @media screen and (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-            .game-container {
-                width: 100vw;
-                height: 60vh;
+        /* Message for Mobile Users */
+        .mobile-message {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+        @media (max-width: 768px) {
+            .mobile-message {
+                display: block;
             }
         }
     </style>
 </head>
 <body>
-    <div class="game-container" id="gameContainer">
+    <div class="game-container">
         <div class="score-board" id="scoreBoard">Distance: 0m</div>
         <img class="mario" id="mario" src="mari-unscreen.gif">
         <div class="obstacle" id="obstacle"></div>
@@ -102,13 +108,20 @@
         <h2>Game Over</h2>
         <p>Your Score: <span id="finalScore">0</span> meters</p>
         <img id="standingMario" src="claps.gif" alt="Standing Mario" style="width: 100%;">
-        <button class="restart-btn" onclick="restartGame()">Restart</button>
+        <button class="restart-btn" onclick="restartGame()" style="align-self: center;">Restart</button>
     </div>
+    
+    <!-- Message Suggesting Desktop Mode -->
+    <div class="mobile-message">
+        For a better experience, enable "Desktop Mode" in your browser.
+    </div>
+
     <script>
         let distance = 0;
         let isGameOver = false;
         let mario = document.getElementById("mario");
 
+        // Function to make Mario jump
         function jump() {
             if (!mario.classList.contains("jump")) {
                 mario.classList.add("jump");
@@ -116,21 +129,16 @@
             }
         }
 
-        // Keyboard input (Desktop)
+        // Trigger jump when pressing Spacebar
         document.addEventListener("keydown", function(event) {
             if (event.code === "Space") {
                 jump();
             }
         });
 
-        // Touch input (Mobile) - Only if the user taps above Mario
-        document.getElementById("gameContainer").addEventListener("touchstart", function(event) {
-            let touchY = event.touches[0].clientY;
-            let marioY = mario.getBoundingClientRect().top;
-            
-            if (touchY < marioY) {
-                jump();
-            }
+        // Trigger jump when tapping anywhere on mobile
+        document.addEventListener("touchstart", function() {
+            jump();
         });
 
         let gameInterval = setInterval(() => {
@@ -161,15 +169,6 @@
         function restartGame() {
             location.reload();
         }
-
-        // Force landscape mode alert
-        function checkOrientation() {
-            if (window.innerHeight > window.innerWidth) {
-                alert("Please rotate your device to landscape mode for a better experience.");
-            }
-        }
-        window.addEventListener("resize", checkOrientation);
-        checkOrientation();
     </script>
 </body>
 </html>
