@@ -127,7 +127,66 @@
         .start-btn:hover, .restart-btn:hover {
             background: #ff9900;
         }
+
+
+        /* Loader Fullscreen */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* Spinner Container */
+        .spinner {
+            position: relative;
+            width: 70px;
+            height: 70px;
+        }
+
+        /* Multiple Rings */
+        .spinner div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 5px solid transparent;
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+
+        .spinner div:nth-child(1) {
+            border-top: 5px solid #ff5733; /* Orange */
+            border-right: 5px solid transparent;
+            animation-duration: 1.2s;
+        }
+
+        .spinner div:nth-child(2) {
+            border-top: 5px solid #33ff57; /* Green */
+            border-right: 5px solid transparent;
+            animation-duration: 1s;
+            animation-direction: reverse;
+        }
+
+        .spinner div:nth-child(3) {
+            border-top: 5px solid #3380ff; /* Blue */
+            border-right: 5px solid transparent;
+            animation-duration: 1.5s;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
     </style>
+   
 </head>
 <body>
     <video class="background-video" autoplay loop muted>
@@ -148,6 +207,44 @@
         <p>Your Score: <span id="finalScore">0</span> meters</p>
         <button class="restart-btn" onclick="restartGame()">Continue</button>
     </div>
+
+<!-- loader -->
+    <!-- Loader with Spinner -->
+    <div class="loader" id="loader">
+        <video class="background-video" autoplay loop muted>
+            <source src="stock-footage-animation-of-old-style-pixel-game-pixel-art-game-background-ground-grass-sky-tree-clouds-and (online-video-cutter.com).mp4" type="video/mp4">
+        </video>
+    
+        <div class="spinner">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <h2><b><i>Please wait while loading..</i></b></h2>
+    </div>
+
+    <script>
+        // Check if the page was reloaded
+        const navigationEntries = performance.getEntriesByType("navigation");
+        const isReload = navigationEntries.length > 0 && navigationEntries[0].type === "reload";
+    
+        if (isReload) {
+            // Show loader only on reload
+            document.getElementById("loader").style.display = "flex";
+    
+            // Hide loader after 2.5 seconds
+            setTimeout(() => {
+                document.getElementById("loader").style.display = "none";
+            }, 2500);
+        } else {
+            // If not a reload, hide loader immediately
+            document.getElementById("loader").style.display = "none";
+        }
+    </script>
+    
+
+    
+
 
     <button class="start-btn" id="startButton" onclick="startGame()">Start Game</button>
 
@@ -188,19 +285,28 @@
         });
 
         function startGame() {
-            gameStarted = true;
-            isGameOver = false;
-            document.getElementById("startButton").style.display = "none";
-            let obstacle = document.getElementById("obstacle");
-            obstacle.style.display = "block";
-            obstacle.style.animation = "moveObstacle 2s infinite linear";
-            
-            // Change Mario to running animation
-            mario.src = "mari-unscreen.gif";
+    gameStarted = true;
+    isGameOver = false;
 
-            bgMusic.play();
-            gameLoop();
-        }
+    // Hide Start Button
+    document.getElementById("startButton").style.display = "none";
+
+    // Reset & Show Obstacle (Now it starts only when Start is clicked)
+    let obstacle = document.getElementById("obstacle");
+    obstacle.style.display = "block"; 
+    obstacle.style.animation = "moveObstacle 2s infinite linear";
+
+    // Change Mario to running animation
+    let mario = document.getElementById("mario");
+    mario.src = "mari-unscreen.gif";
+
+    // Play Background Music
+    let bgMusic = document.getElementById("bgMusic");
+    bgMusic.play();
+
+    // Start Game Loop
+    gameLoop();
+}
 
         function gameLoop() {
             let gameInterval = setInterval(() => {
@@ -235,8 +341,32 @@
         }
 
         function restartGame() {
-            location.reload();
-        }
+    let gameOverScreen = document.getElementById("gameOver");
+    let obstacle = document.getElementById("obstacle");
+    let mario = document.getElementById("mario");
+
+    // Hide Game Over Screen
+    gameOverScreen.style.display = "none";
+
+    // Reset Score
+    distance = 0;
+    document.getElementById("scoreBoard").innerText = `Distance: 0m`;
+
+    // Stop Obstacle Movement Until Game Starts
+    obstacle.style.display = "none"; 
+    obstacle.style.animation = "none"; 
+
+    // Reset Mario Image
+    mario.src = "standing-mario.png";
+
+    // Show Start Button Again
+    document.getElementById("startButton").style.display = "block";
+
+    // Reset Game State
+    isGameOver = false;
+    gameStarted = false;
+}
+
     </script>
 </body>
 </html>
